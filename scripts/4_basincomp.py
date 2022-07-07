@@ -1,13 +1,56 @@
+
+"""
 # -------------------------------------------------------------------------
-# Name:        shapefile in low-res
+# Name:        Shapefile in low-res
 # Purpose:     creates shapefiles and a list in lower resolution (5 or 30 arcmin)
 #
 # Author:      PB
 #
 # Created:     15/05/2022
 # Copyright:   (c) PB 2022
-# ----------------------------------------------------------------------
 
+# input:  results/grdc_shape_allend_1.txt  station with new location fitted to merit UPA from 3_makeshape.py
+# output: basins_30min.txt or basins_5min.txt: station with new location fitted to 30 arcmin or 5 arcmin
+#          shapefiles of low-res basins in : ashape30min or ashape5min e.g. grdc_basin_30min_basin_1104150.shp
+
+basins_30min.txt
+----------------
+No: Number from 0 ...
+GRDC_No: GRDC number
+similarity: similarity of 30min low-res shape with high-res shape from 3arcsec
+areaGRDC: area provided by GRDC
+area: area from high-res UPA MERIT at pour point
+lat: coorected latitude on high-res
+lon: corrected longitude on high-res
+area30min : area on pour point of best fitting 30arcmin grid cell
+lat30min: latitude on 30arcmin
+lon30min: longitude on 30arcmin
+lat30move: latitude moved to grid cell centre
+lon30move: longitude moved to grid cell centre
+indloc: locatation of indice which is taken as nbest fit: a 5x5 gridcell surrounding is taken numbered 0-24
+upsloc: location (index of 0-24) of best fitting upsstream area
+ind:    scoring result for best upstream fitting based on upstream area fitting and shape similarity
+indups: scoring on upstream area fitting between low-res area and high-res area
+ups1:   low-res upstream area of best upstream fitting
+indshape: scoring on similarity between low-res shape and high res shape
+shapeloc: location (index of 0-24) of best fitting shape similarity
+ind:    scoring result for best upstream fitting based on upstream area fitting and shape similarity
+indups: scoring on upstream area fitting between low-res area and high-res area
+ups1:   low-res upstream area of best shape fitting
+indshape: scoring on similarity between low-res shape and high res shape
+
+# uses
+# ldd_30min.tif: river network in pcraster format
+30min from Döll, P., Lehner, B. (2002): Validation of a new global 30-min drainage direction map. Journal of Hydrology, 258(1-4), 214-23
+5min ldd from: Eilander, D., van Verseveld, W., Yamazaki, D., Weerts, A., Winsemius, H. C., and Ward, P. J.: A hydrography upscaling method for scale-invariant parametrization of distributed hydrological models, Hydrol. Earth Syst. Sci., 25, 5287-5313, 10.5194/hess-25-5287-2021, 2021.
+# ups_30min.tif: upstream area in [km]
+
+# Shapefiles (smooth) with high resolution from: /ashape2_merit/grdc_basin_merit_
+
+
+
+# ----------------------------------------------------------------------
+"""
 
 import geopandas as gp
 import numpy as np
@@ -62,16 +105,16 @@ reso30 = True
 if reso30:
     # input 30 arcmin
     rootshape2 = root + "/ashape30min/grdc_basin_30min_"
-    lddname = "P:/watmodel/CWATM/cwatm_input_isimip3/routing/ldd_new.tif"
-    upsname = "P:/watmodel/CWATM/cwatm_input_isimip3/routing/ups_new.tif"
+    lddname = "P:/watproject/Datasets/MERIT_yamazaki/amodel2/ldd/ldd_30min.tif"
+    upsname = "P:/watproject/Datasets/MERIT_yamazaki/amodel2/ldd/ups_30min.tif"
     # output 30min
     grdc_Merit = "results/basins_30min.txt"
     grdc_error = "results/basins_30min_error.txt"
 else:
     # input 5 arcmin
     rootshape2 = root + "/ashape5min/grdc_basin_5min_"
-    lddname = "P:/watmodel/CWATM/CWAT_input_5min/processing/routing_eilander/kinematic/ldd.tif"
-    upsname = "P:/watmodel/CWATM/CWAT_input_5min/processing/routing_eilander/kinematic/ups.tif"
+    lddname = "P:/watproject/Datasets/MERIT_yamazaki/amodel2/ldd/ldd_5min.tif"
+    upsname = "P:/watproject/Datasets/MERIT_yamazaki/amodel2/ldd/ups_5min.tif"
     # output
     grdc_Merit = "results/basins_5min.txt"
     grdc_error = "results/basins_5min_error.txt"
@@ -207,7 +250,7 @@ for stationNo in range(len(makeshp)):
             subbasins = flw.basins(xy=([xx,yy]))
             basin1km = vectorize(subbasins.astype(np.int32), 0, flw.transform, name="basin")
             shapefile2 = rootshape2 + "basin_" + grdc_no + ".shp"
-            #basin1km.to_file(shapefile2)
+            basin1km.to_file(shapefile2)
 
             p_inter = gp.overlay(s2, basin1km, how='intersection')
             p_union = gp.overlay(s2, basin1km, how='union')

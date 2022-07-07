@@ -1,3 +1,4 @@
+"""
 # -------------------------------------------------------------------------
 # Name:        Create list of stations to calibrate or validate
 # Purpose:     using the watershed boundary shaepfile on 30min (or 5min) and the station metadata
@@ -11,6 +12,57 @@
 # Copyright:   (c) PB 2022
 # ----------------------------------------------------------------------
 
+# input:  basins_30min.txt or basins_5min.txt: station with new location fitted to 30 arcmin or 5 arcmin
+# output: results/grdc_station_sel30min.txt
+
+- if a station can be used for calibration it gets a C as indicator
+- if a station passes the selection but is to close to another station which is used for calibration it gets a V
+- if a station does not pass the selection criteria it gets a N
+
+Selection criteria:
+- similarityMin: Minimum similarity between 3 arcsec basin and low-res basin: here: 0.7 (1 = identicaly, 0 = nothing in common)
+- areaaccorMin: Minimim area error: area provided from GRDC and area from low-res shapefile should have at least (e.g 0.4)
+  area = 0.3 x areaGRDC is dismissed , area = 0.5 x areaGRDC is used
+- t_yrsMin = 5:  5 minimum years of record
+t_endMin = 1985: last year should be 1985 or younger for daily timeseries
+d_endMin = 1985  last year for monthly timeseries
+
+Scoring points:
+if 2 (or more) station are too close to each other the one is taken with the most scoring points
+- simiScore = 2  # every 2% scoring +1
+- areaScore = 2   # every 2% scoring +1
+- tyrsScore = 5  # every 5 years a score
+- tyrsScoreMax = 10 # max score for end years
+- tendScore = 3  # every 3 years a point
+- tendScoremax = 100 # maximum score from this can only be 100
+- dayscore = 5  # points if daily timeseries
+- MissingScore = 5  # neg. points for missing values
+
+grdc_station_sel30min.txt
+-------------------------
+No: Number from 0 ...
+GRDC_No: GRDC number
+latGRDC: original latitude from GRDC metafile
+lonGRDC: original longituted from GRDC metafil
+latcorrected: coorected latitude on high-res
+loncorrected: corrected longitude on high-res
+lat30min: latitude moved to grid cell centre
+lon30min: longitude moved to grid cell centre
+areaGRDC: area provided by GRDC
+area: area from high-res UPA MERIT at pour point
+area30min : area on pour point of best fitting 30arcmin grid cell
+similarity: similarity of 30min low-res shape with high-res shape from 3arcsec
+area_accordance> comparison of area30min with areaGRDC
+calibrate_orNot> can be use for calibration (C), validation (V) or is dismissed (N)
+scoring: scoring based on the scoring criteria
+grdc_scored_better: grdc number with scored better
+better_score: better score of the grdc no which is used for calibration
+
+# uses
+# grdc_2022_10701.txt: all data from GRDC metafile 2022 with 10701 stations
+# Shapefiles with low resolution from: ashape30min/grdc_basin_30min_basin_
+
+"""
 
 import geopandas as gp
 import numpy as np
@@ -56,16 +108,19 @@ reso30 = True
 if reso30:
     # input 30 arcmin
     shapedir = "P:/watproject/Datasets/MERIT_yamazaki/ashape30min/grdc_basin_30min_basin_"
-    grdc_stations = "basins_30min4.txt"
+    grdc_stations = "results/basins_30min.txt"
     # output
     grdc_Station = "results/grdc_station_sel30min.txt"
+    header = "No\tGRDC_No\tlatGRDC\tlonGRDC\tlatcorrected\tloncorrected\tlat30min\tlon30min\tareaGRDC\tarea\tarea30min\tsimilarity\tarea_accordance\tcalibrate_orNot\tscoring\tgrdc_scored_better\tbetter_score\n"
+
 
 else:
     # input 5 arcmin
     shapedir = "P:/watproject/Datasets/MERIT_yamazaki/ashape5min/grdc_basin_5min_basin_"
-    grdc_stations = "basins_5min4.txt"
+    grdc_stations = "results/basins_5min.txt"
     # output
     grdc_Station = "results/grdc_station_sel5min.txt"
+    header = "No\tGRDC_No\tlatGRDC\tlonGRDC\tlatcorrected\tloncorrected\tlat5min\tlon5min\tareaGRDC\tarea\tarea5min\tsimilarity\tarea_accordance\tcalibrate_orNot\tscoring\tgrdc_scored_better\tbetter_score\n"
 
 #----------------------------------------------------------
 
@@ -84,7 +139,6 @@ headgrdc[-1] = headgrdc[-1][0:-1]
 f.close()
 
 
-header = "No\t GRDC_No\tlat\tlon\tnewlat\tnewlon\tGRDCarea\tarea\tshapearea\toldsha\toldshapearea\tindicator\n"
 f = open(grdc_Station, "w")
 f.write(header)
 f.close()
@@ -116,7 +170,6 @@ tendScoremax = 100
 dayscore = 5  # points if daily timeseries
 
 MissingScore = 5  # pneg. points for missing values
-
 
 # ------------------------------------
 grdc_area ={}
@@ -243,8 +296,8 @@ for stationNo in range(lengrdc):
     grdc_no =  station[1]
     grdcOri = grdc_d[grdc_no]
 
-    upsGRDC = float(station[3])
-    upsreal = float(station[7])
+    upsGRDC = float(station[3])  # original area provided
+    upsreal = float(station[7])  # low-res area
     coord = [ float(station[8]), float(station[9])]       # lat, lon
     similarity = float(station[2])
     if upsGRDC > upsreal:
@@ -253,9 +306,16 @@ for stationNo in range(lengrdc):
         areaAccor = upsGRDC / upsreal
     if areaAccor < 0: areaAccor = 1.0
 
-    s = str(stationNo) + "\t" + grdc_no + "\t" + f"{upsGRDC:10.0f}" + "\t" + f"{float(grdcOri[6]):8.4f}" + "\t" + f"{float(grdcOri[7]):8.4f}"
-    s = s + "\t" + f"{upsreal:10.0f}" + "\t" + f"{coord[1]:9.6f}" + "\t" + f"{coord[0]:9.6f}"
+    s = str(stationNo) + "\t" + grdc_no + "\t" + f"{float(grdcOri[6]):8.4f}" + "\t" + f"{float(grdcOri[7]):8.4f}"
+    s = s + "\t" + f"{float(station[5]):8.4f}" + "\t" + f"{float(station[6]):8.4f}" + "\t" + f"{float(station[10]):8.4f}"+ "\t" + f"{float(station[11]):8.4f}"
+    s = s + "\t" + f"{upsGRDC:10.0f}" + "\t" + f"{float(station[4]):10.0f}" + "\t" + f"{float(station[7]):9.6f}"
     s = s + "\t" + f"{similarity:6.3f}" + "\t" + f"{areaAccor:6.3f}"
+
+
+
+    #s = str(stationNo) + "\t" + grdc_no + "\t" + f"{upsGRDC:10.0f}" + "\t" + f"{float(grdcOri[6]):8.4f}" + "\t" + f"{float(grdcOri[7]):8.4f}"
+    #s = s + "\t" + f"{upsreal:10.0f}" + "\t" + f"{coord[1]:9.6f}" + "\t" + f"{coord[0]:9.6f}"
+    #s = s + "\t" + f"{similarity:6.3f}" + "\t" + f"{areaAccor:6.3f}"
 
     calib = "N"
     if grdc_no in grdcselect:
@@ -266,12 +326,10 @@ for stationNo in range(lengrdc):
         calib = "V"
     s = s + "\t" + calib
     if grdc_no in grdcselect:
+        # + sum scoring - higher is better
         s = s + "\t" + str(grdcselect[grdc_no][1][4])
     if grdc_no in validate:
-        s = s + "\t" + validate[grdc_no][0] + "\t" + f"{validate[grdc_no][1]:6.3f}"
-        s = s + "\t" + f"{validate[grdc_no][2]:10.0f}" + "\t" + f"{validate[grdc_no][3]:10.0f}"
-        s = s+ "\t" + str( validate[grdc_no][4])+ "\t" + str( validate[grdc_no][5])
-
+        s = s + "\t" + validate[grdc_no][0] + "\t" + str( validate[grdc_no][5])
 
     print (s)
     s1 = s + "\n"

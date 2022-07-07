@@ -10,7 +10,7 @@
 # Copyright:   (c) PB 2022
 
 input:  grdc_2022_10577.txt   10577 station datasets >= 10km2 upstream area or no area provided
-output: grdc_MERIT_1111.txt: station with new location fitted to merit UPA
+output: grdc_MERIT_1.txt: station with new location fitted to merit UPA
 
 No: Number from 1 ...
 GRDC_No: GRDC number
@@ -146,7 +146,7 @@ grdc_stations = root2 + "grdc_2022_10577.txt"
 shapefolder = "P:/watproject/Datasets/MERIT_yamazaki/grdc_station_upstream/grdc_basins_smoothed_md_no_"
 
 #OUTPUT
-grdc_Merit = "results/grdc_Merit_1111.txt"
+grdc_Merit = "results/grdc_Merit_1.txt"
 
 # --------------------------------------------------------------------------------
 # cell size: 3 arcsec
@@ -181,10 +181,8 @@ f.close()
 # -----------------------------------
 jjj = 0
 for stationNo in range(len(grdc)):
-#for stationNo in range(10):
 
    station = grdc[stationNo].split("\t")
-
    upsreal = float(station[9])
    # lat lon
    coord = [ float(station[7]), float(station[8])]
@@ -207,10 +205,6 @@ for stationNo in range(len(grdc)):
 
    jjj = jjj + 1
    if jjj > -1:
-
-    #upsreal = 26448
-    #coord = [12.015, 48.9475]
-    # threshold 0.05
 
     # calculate which ups is used - in case the coordinate are at the edge other ups are loaded
     xmin = int(coord[1] // 5) * 5
@@ -280,17 +274,6 @@ for stationNo in range(len(grdc)):
     row = ups.shape[0]
     top = transform[0][5]
     left = transform[0][2]
-
-
-    """
-    with rasterio.open('upst1.tif','w',driver='GTiff',
-        height=ups.shape[0], width=ups.shape[1],
-        count=1, dtype=ups.dtype, crs=crs, transform=transform[0],
-    ) as dst:
-        dst.write(ups, 1)
-    """""
-
-
 
     col1 = int((coord[1] - left) * invcell)
     row1 = int((top -coord[0]) * invcell)

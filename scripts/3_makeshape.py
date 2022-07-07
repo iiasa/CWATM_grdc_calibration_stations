@@ -9,19 +9,19 @@
 # Created:     15/05/2022
 # Copyright:   (c) PB 2022
 
-# input:  grdc_MERIT_1111.txt  station with new location fitted to merit UPA
-# output: grdc_MERIT_2222.txt: station with new location fitted to merit UPA and shapefile
-#       shapefiles of basins in : ashapex_merit  e.g. grdc_basin_merit_1104800.shp
+# input:  results/grdc_MERIT_2.txt  station with new location fitted to merit UPA from 2_makeshape.py
+# output: grdc_shape_allend_1.txt: station with new location fitted to merit UPA and shapefile
+#       shapefiles of basins in : ashape2_merit  e.g. grdc_basin_merit_smooth__1104800.shp
 
-
+grdc_shape_allend_1.txt
+-----------------------
 GRDC_No: GRDC number
 lat: original latitude from GRDC metafile
 lon: original longituted from GRDC metafile
-area; provided basin area from GRDC metafile
 newlat: corrected latitude based on MERIT UPA dataset
 newlon: corrected longitute based on MERIT UPA dataset
-newarea: basin area based on MERIT UPA dataset
-UPS_Indicator:  min error in % from MERIT UPA to provided basin area
+GRDCarea; provided basin area from GRDC metafile
+area: basin area based on MERIT UPA dataset
 shapearea: area of the shape calculated with geopandas directly from shape
 Lehner_shape_avail: Is there a shapefile from Lehner, 2012 to compare with?
 lehner_shapearea: area of the shape (lehner, 2012) calculated with geopandas directly from shape
@@ -30,7 +30,8 @@ Indicator: indicator of similarity calculated by intersection / union of newshae
 # uses
 # grdc_2022_10701.txt: all data from GRDC metafile 2022 with 10701 stations
 # grdc2022_lehner2012.txt  - translation file new GRDC ID - old GRDC ID
-# Shapefiles of basins from lehner 2012: grdc_station_upstream/grdc_basins_smoothed_md_no_
+# Shapefiles of basins from Lehner 2012: grdc_station_upstream/grdc_basins_smoothed_md_no_
+# Shapefiles with high resolution from: ashape_merit/grdc_basin_merit_
 """
 
 # import pyflwdir, some dependencies
@@ -163,10 +164,10 @@ root =  "P:/watproject/Datasets/MERIT_yamazaki/upa_"
 root2 =  "P:\\watproject\\Datasets\\MERIT_yamazaki\\upa_"
 
 rootshape = "P:/watproject/Datasets/MERIT_yamazaki/ashape_merit/grdc_basin_merit_"
-rootshape2 = "P:/watproject/Datasets/MERIT_yamazaki/ashape2x_merit/grdc_basin_merit_"
+rootshape2 = "P:/watproject/Datasets/MERIT_yamazaki/ashape2_merit/grdc_basin_merit_"
 rootgrdcshape = "P:/watproject/Datasets/MERIT_yamazaki/grdc_station_upstream/"
 
-grdc_stations = "makeshape_all10349.txt"
+grdc_stations = "grdc_MERIT_2.txt"
 #----------------------------------------------------------
 
 
@@ -185,8 +186,8 @@ headgrdc[-1] = headgrdc[-1][0:-1]
 f.close()
 
 # results
-grdc_Merit = "grdc_shape_allend2.txt"
-header = "No\t GRDC_No\tlat\tlon\tnewlat\tnewlon\tGRDCarea\tarea\tshapearea\toldsha\toldshapearea\tindicator\n"
+grdc_Merit = "results/grdc_shape_allend_1.txt"
+header = "No\t GRDC_No\tlat\tlon\tnewlat\tnewlon\tGRDCarea\tarea\tshapearea\tLehner_shape_avail\tlehner_shapearea\tnewshape_lehner_comparison\n"
 f = open(grdc_Merit, "w")
 f.write(header)
 f.close()
@@ -284,14 +285,6 @@ for stationNo in range(len(grdc)):
             save1 = True
 
     save2 = False
-    # shapefile
-    #shapefile1 = rootshape + grdc_no + ".shp"
-    #gdf_bas = gp.GeoDataFrame.from_file(shapefile1)
-    #try:
-    #    areashape = np.sum(gpd_geographic_area_line_integral(gdf_bas) / (1000 * 1000))
-    #except:
-    #    areashape = 1000 * 1482.5 * np.sum(gdf_bas.area) * 0.092593 * 0.092593 * np.cos(np.pi / 180.0 * float(station[6]))
-
 
     if ups > 3:
         if areashape >3:
@@ -302,11 +295,6 @@ for stationNo in range(len(grdc)):
             if quot2>=0.8:
                 save2 = True
 
-
-
-    #s = str(stationNo) + "\t" + grdc_no + "\t" + f"{float(station[2]):8.4f}" + "\t" + f"{float(station[3]):8.4f}"
-    #s = s + "\t" + f"{coord[1]:9.6f}" + "\t" + f"{coord[0]:9.6f}"
-    #s = s + "\t" + f"{upsreal:10.0f}" + "\t" + f"{ups:10.0f}"
     save = False
     if save1:
         if save2:
@@ -314,9 +302,10 @@ for stationNo in range(len(grdc)):
 
 
     if save:
+
         # shapefile
-        #shapefile1 = rootshape + grdc_no + ".shp"
-        #gdf_bas = gp.GeoDataFrame.from_file(shapefile1)
+        shapefile1 = rootshape + grdc_no + ".shp"
+        gdf_bas = gp.GeoDataFrame.from_file(shapefile1)
         g1 = gdf_bas.simplify(0.001)
 
         shapefile1 = rootshape2 +"smooth_"+ grdc_no + ".shp"
@@ -347,6 +336,7 @@ for stationNo in range(len(grdc)):
         ii =1
         #s = s + "\tNot saved"
     #print(s)
+
 
     if shap[0:1] =="1":
         s1 = "TRUE"
@@ -379,7 +369,6 @@ for stationNo in range(len(grdc)):
             os.remove(shapefile1)
         except:
             ii = 1
-
 
 
 print ("Done")

@@ -1,4 +1,4 @@
-No	GRDC_No	lat	lon	newlat	newlon	GRDCarea	area	shapearea	oldsha	oldshapearea	indicator
+No	GRDC_No	lat	lon	newlat	newlon	GRDCarea	area	shapearea	Lehner_shape_avail	lehner_shapearea	newshape_lehner_comparison
 0	1104150	36.02	0.27	36.02	0.271667	43750	46157	46312	1	44460	0.953
 1	1104200	35.5	0.68	35.4975	0.68	6635	5456	5475	1	5500	0.986
 2	1104300	35.87	1.12	35.88102	1.10408	2398	2177	2184	1	2221	0.971
