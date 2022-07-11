@@ -6,6 +6,9 @@
 Peter Burek, Mikhail Smilovic
 International Institute for Applied Systems Analysis, Laxenburg, Austria
 
+We address a small but annoying problem every grid-based hydrological model must solve to compare simulated with observed discharge. First, observed station location does not always fit with high-res river network. We updated the database with stations based on a new high-res network. Second, the corrected location does not fit a coarser grid-based river network. We use a new concept of shape-file similarity to fit station locations on a coarser grid, reducing the error in assigning stations to the wrong basin.
+
+
 ## Abstract
 
 The Global Runoff Data Centre provides time series of observed discharges that are very valuable for calibrating and validating the results of hydrological models. We address a common issue in large-scale hydrology which, though  investigated several times, has not been satisfactorily solved. Grid-based hydrological models need to fit the reported station location to the river network depending on the resolution, to compare simulated discharge with observed discharge. We introduce an Intersection over Union ratio approach to selected station locations on a coarser grid scale, reducing the errors in assigning stations to the wrong basin. We update the 10-year-old database of watershed boundaries with additional stations based on a high-resolution (3 arcseconds) river network, and we provide source codes and high- and low-resolution watershed boundaries.
@@ -19,6 +22,26 @@ The first step toward generating a high-resolution collection of watershed shape
 The second step, of generating a low-resolution collection of watershed shapefiles based on Intersection over Union ratio, was inspired by the ideas of Rezatofighi et al. (2019) and Munier and Decharme (2021). It is a better approach than selecting a station location on low-resolution river network systems based only on the upstream area and distance to the original location. Here, we provide the low-resolution watershed boundaries on 30’and 5’ and the source code to produce results for different resolutions and projection systems. 
 
 The third step, of selecting suitable stations for calibration and validation, was also based on the Intersection over Union ratio. This selection of stations can now be used in a more effective way to calibrate grid-based hydrological models at different resolutions.
+
+
+## Dataset produced
+
+### Excel file: evaluation.xlsx
+
+10241 station with corrected lat/lon and high-Res shapefile based on MERIT (Yamazaki et al. 2019)
+
+953  stations for 30 arcmin calibration with corrected lat/lon and adjusted lat/lon for 30 arcmin
+
+3917 stations for 5 arcmin calibration with corrected lat/lon and adjusted lat/lon for 5 arcmin
+
+### Basin watershed boundaries shapefiles
+
+10241 shapefiles for stations with corrected lat/lon and high-Res shapefile based on MERIT (Yamazaki et al. 2019)
+
+2725 shapefiles for stations for 30 arcmin calibration with corrected lat/lon on 30 arcmin
+
+6416 shapefiles for stations for 5 arcmin calibration with corrected lat/lon on 5 arcmin
+
 
 
 ## Data used
@@ -80,7 +103,7 @@ Eilander, D., van Verseveld, W., Yamazaki, D., Weerts, A., Winsemius, H. C., and
 
 ## Output
 
-Excel file
+Excel file: evaluation.xlsx
 
 -	summary from originally 10701 stations to 10241 selected station with corrected location and basin shapefile
 -	all 10701 station with 6 categories (1 smaller than 10km2, 2 no basin found, 3 area error > 50%,4 area >= 9000km2,5 area between 1000-9000km2,6 smaller than 1000km2)
